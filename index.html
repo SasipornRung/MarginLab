@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from "react";
-import { ArrowRight, Shield, Zap, Target, Clock, Lock, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Shield, Zap, Target, Clock, Lock, CheckCircle2, X } from "lucide-react";
 
 export default function MarginLab() {
   const [showApplyFlow, setShowApplyFlow] = useState(false);
-  const [selectedMode, setSelectedMode] = useState(null); // 'quick' | 'deep' | null
+  const [selectedMode, setSelectedMode] = useState(null);
 
   const [formData, setFormData] = useState({
     businessModel: "",
@@ -18,13 +18,12 @@ export default function MarginLab() {
 
   const scores = useMemo(() => ({ pos: 40, excel: 30, notebook: 10, head: 5 }), []);
   const dataReadiness = useMemo(() => {
-    const total = formData.dataFormat.reduce((sum, f) => sum + (scores[f] || 0), 0);
+    const total = formData.dataFormat.reduce((sum, f) => sum + (scores[f] ?? 0), 0);
     return Math.min(total, 100);
   }, [formData.dataFormat, scores]);
 
   const resetFlow = () => {
     setSelectedMode(null);
-    setShowApplyFlow(false);
     setFormData({
       businessModel: "",
       painPoint: "",
@@ -37,32 +36,42 @@ export default function MarginLab() {
     });
   };
 
-  const startMode = (mode) => {
-    setShowApplyFlow(true);
-    setSelectedMode(mode);
-  };
-
-  const submit = () => {
-    // TODO: replace with API call
-    alert("Application submitted! We will review and contact you within 24 hours.");
+  const closeFlow = () => {
+    setShowApplyFlow(false);
     resetFlow();
   };
 
   const ApplyFlow = () => {
     if (!showApplyFlow) return null;
 
-    // step 1: choose mode
+    // backdrop click to close (optional)
+    const onBackdrop = (e) => {
+      if (e.target === e.currentTarget) closeFlow();
+    };
+
+    // STEP 1: choose mode
     if (!selectedMode) {
       return (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div
+          onClick={onBackdrop}
+          className="fixed inset-0 bg-black/95 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        >
           <div className="max-w-2xl w-full">
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-cyan-500/30 rounded-lg p-8">
+            <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-cyan-500/30 rounded-lg p-8 relative">
+              <button
+                onClick={closeFlow}
+                className="absolute right-4 top-4 text-slate-400 hover:text-white"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
               <h3 className="text-2xl font-bold text-cyan-400 mb-6">Choose Your Mode</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <button
                   onClick={() => setSelectedMode("quick")}
-                  className="group bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 border-2 border-yellow-500/30 hover:border-yellow-400 rounded-lg p-6 text-left transition-all hover:scale-[1.02]"
+                  className="group bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 border-2 border-yellow-500/30 hover:border-yellow-400 rounded-lg p-6 text-left transition-all hover:scale-105"
                 >
                   <Zap className="w-8 h-8 text-yellow-400 mb-3" />
                   <h4 className="text-xl font-bold text-white mb-2">Quick Insight</h4>
@@ -72,7 +81,7 @@ export default function MarginLab() {
 
                 <button
                   onClick={() => setSelectedMode("deep")}
-                  className="group bg-gradient-to-br from-red-500/10 to-red-600/5 border-2 border-red-500/30 hover:border-red-400 rounded-lg p-6 text-left transition-all hover:scale-[1.02]"
+                  className="group bg-gradient-to-br from-red-500/10 to-red-600/5 border-2 border-red-500/30 hover:border-red-400 rounded-lg p-6 text-left transition-all hover:scale-105"
                 >
                   <Target className="w-8 h-8 text-red-400 mb-3" />
                   <h4 className="text-xl font-bold text-white mb-2">Deep Dive (NDA)</h4>
@@ -81,7 +90,7 @@ export default function MarginLab() {
                 </button>
               </div>
 
-              <button onClick={resetFlow} className="text-slate-400 hover:text-white text-sm">
+              <button onClick={closeFlow} className="text-slate-400 hover:text-white text-sm">
                 ← Back
               </button>
             </div>
@@ -90,11 +99,19 @@ export default function MarginLab() {
       );
     }
 
-    // step 2: form
+    // STEP 2: form
     return (
-      <div className="fixed inset-0 bg-black/95 backdrop-blur-sm z-50 overflow-y-auto p-4">
+      <div onClick={onBackdrop} className="fixed inset-0 bg-black/95 backdrop-blur-sm z-50 overflow-y-auto p-4">
         <div className="max-w-2xl mx-auto my-8">
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-cyan-500/30 rounded-lg p-8">
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-cyan-500/30 rounded-lg p-8 relative">
+            <button
+              onClick={closeFlow}
+              className="absolute right-4 top-4 text-slate-400 hover:text-white"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
             <div className="flex items-center gap-3 mb-6">
               {selectedMode === "quick" ? (
                 <Zap className="w-6 h-6 text-yellow-400" />
@@ -142,7 +159,6 @@ export default function MarginLab() {
                   <option value="pricing">ราคาขายต่ำเกินไป</option>
                   <option value="other">อื่นๆ...</option>
                 </select>
-
                 {formData.painPoint === "other" && (
                   <textarea
                     value={formData.painPointOther}
@@ -209,11 +225,7 @@ export default function MarginLab() {
                     <span className="text-slate-400 text-sm font-semibold">Data Readiness Level</span>
                     <span
                       className={`text-sm font-bold ${
-                        dataReadiness >= 70
-                          ? "text-green-400"
-                          : dataReadiness >= 40
-                          ? "text-yellow-400"
-                          : "text-red-400"
+                        dataReadiness >= 70 ? "text-green-400" : dataReadiness >= 40 ? "text-yellow-400" : "text-red-400"
                       }`}
                     >
                       {dataReadiness}%
@@ -318,9 +330,7 @@ export default function MarginLab() {
                 </div>
 
                 {formData.decisionMaker === "no" && (
-                  <p className="text-yellow-300 text-sm mt-3">
-                    ⚠️ เราอาจจะขอคุยกับ decision maker ด้วยเพื่อให้แผนสำเร็จ
-                  </p>
+                  <p className="text-yellow-300 text-sm mt-3">⚠️ เราอาจจะขอคุยกับ decision maker ด้วยเพื่อให้แผนสำเร็จ</p>
                 )}
               </div>
 
@@ -328,44 +338,18 @@ export default function MarginLab() {
                 <p className="text-red-300 text-sm">⚠️ We reject cases that cannot be measured within 14 days.</p>
               </div>
 
-              <div className="border-t border-slate-700 pt-6">
-                <h4 className="text-white font-semibold mb-4">Agreement</h4>
-                <div className="space-y-3">
-                  {[
-                    "Scope of work: 14-day diagnostic → action plan",
-                    "What we don't do: ongoing implementation, technical builds",
-                    "Data handling: minimum required, automatic purge after delivery",
-                    "Feedback permission: anonymized case studies only",
-                  ].map((txt) => (
-                    <label
-                      key={txt}
-                      className="flex items-start gap-3 text-slate-300 text-sm cursor-pointer hover:text-white transition-colors"
-                    >
-                      <input type="checkbox" className="mt-1" />
-                      <span>{txt}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
+              {/* Actions */}
               <div className="flex gap-4">
-                <button
-                  onClick={() => setSelectedMode(null)}
-                  className="px-6 py-3 text-slate-400 hover:text-white transition-colors"
-                >
+                <button onClick={resetFlow} className="px-6 py-3 text-slate-400 hover:text-white transition-colors">
                   ← Back
                 </button>
                 <button
-                  onClick={submit}
+                  onClick={() => alert("Application submitted! We will review and contact you within 24 hours.")}
                   className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold px-8 py-3 rounded-lg hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
                 >
                   Submit Application
                 </button>
               </div>
-
-              <button onClick={resetFlow} className="text-slate-500 hover:text-white text-xs mt-2">
-                Close overlay
-              </button>
             </div>
           </div>
         </div>
@@ -375,6 +359,7 @@ export default function MarginLab() {
 
   return (
     <div className="min-h-screen bg-black text-white">
+      {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/20 via-black to-blue-900/20" />
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" />
@@ -385,6 +370,7 @@ export default function MarginLab() {
       </div>
 
       <div className="relative">
+        {/* Header */}
         <header className="border-b border-slate-800/50 backdrop-blur-sm">
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center justify-between">
@@ -400,6 +386,7 @@ export default function MarginLab() {
           </div>
         </header>
 
+        {/* Hero */}
         <section className="container mx-auto px-4 py-20 md:py-32">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
@@ -423,13 +410,7 @@ export default function MarginLab() {
                 <span className="bg-white/20 px-2 py-1 rounded text-sm">3 slots</span>
               </button>
 
-              <button
-                onClick={() => {
-                  const el = document.getElementById("how-it-works");
-                  el?.scrollIntoView({ behavior: "smooth" });
-                }}
-                className="border-2 border-slate-700 hover:border-cyan-500 text-white font-semibold px-8 py-4 rounded-lg transition-all flex items-center justify-center gap-2 group"
-              >
+              <button className="border-2 border-slate-700 hover:border-cyan-500 text-white font-semibold px-8 py-4 rounded-lg transition-all flex items-center justify-center gap-2 group">
                 How it works
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
@@ -437,137 +418,16 @@ export default function MarginLab() {
           </div>
         </section>
 
-        <section id="how-it-works" className="container mx-auto px-4 py-20">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-slate-700/50 rounded-lg p-8 backdrop-blur-sm hover:border-cyan-500/50 transition-all">
-                <Zap className="w-12 h-12 text-cyan-400 mb-4" />
-                <h3 className="text-xl font-bold text-white mb-3">Diagnose where money leaks</h3>
-                <p className="text-slate-400">Rapid forensic analysis of your margin structure</p>
-              </div>
+        {/* ... ส่วนอื่น ๆ ของหน้าเดิมคุณใช้ต่อได้เหมือนเดิม ... */}
 
-              <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-slate-700/50 rounded-lg p-8 backdrop-blur-sm hover:border-cyan-500/50 transition-all">
-                <Target className="w-12 h-12 text-cyan-400 mb-4" />
-                <h3 className="text-xl font-bold text-white mb-3">Identify 1–2 leverage points</h3>
-                <p className="text-slate-400">Focus on what moves the needle most</p>
-              </div>
-
-              <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-slate-700/50 rounded-lg p-8 backdrop-blur-sm hover:border-cyan-500/50 transition-all">
-                <CheckCircle2 className="w-12 h-12 text-cyan-400 mb-4" />
-                <h3 className="text-xl font-bold text-white mb-3">Deliver executable action plan</h3>
-                <p className="text-slate-400">Clear steps you can implement immediately</p>
-              </div>
-            </div>
-
-            <p className="text-center text-slate-500 mt-8 text-sm italic">Not reports. Not slides. Just decisions.</p>
-          </div>
-        </section>
-
-        <section className="container mx-auto px-4 py-20">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-cyan-400">
-              Two Modes. Your Choice.
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 border-2 border-yellow-500/30 rounded-lg p-8 backdrop-blur-sm">
-                <div className="flex items-center gap-3 mb-6">
-                  <Zap className="w-10 h-10 text-yellow-400" />
-                  <h3 className="text-2xl font-bold text-yellow-400">Quick Insight</h3>
-                </div>
-
-                <ul className="space-y-3 mb-8 text-slate-300">
-                  {["ไม่ต้องแชร์ข้อมูลลึก", "คุยเชิง analogy", "ได้ Insight Cards (high-level)"].map((t) => (
-                    <li key={t} className="flex items-start gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-yellow-400 mt-1 flex-shrink-0" />
-                      <span>{t}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  onClick={() => startMode("quick")}
-                  className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-semibold px-6 py-3 rounded-lg hover:shadow-lg hover:shadow-yellow-500/50 transition-all"
-                >
-                  Start Quick Insight
-                </button>
-              </div>
-
-              <div className="bg-gradient-to-br from-red-500/10 to-red-600/5 border-2 border-red-500/30 rounded-lg p-8 backdrop-blur-sm">
-                <div className="flex items-center gap-3 mb-6">
-                  <Target className="w-10 h-10 text-red-400" />
-                  <h3 className="text-2xl font-bold text-red-400">Deep Dive (NDA)</h3>
-                </div>
-
-                <ul className="space-y-3 mb-8 text-slate-300">
-                  {["Digital NDA", "Minimum data only", "Action Plan + KPI"].map((t) => (
-                    <li key={t} className="flex items-start gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-red-400 mt-1 flex-shrink-0" />
-                      <span>{t}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  onClick={() => startMode("deep")}
-                  className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold px-6 py-3 rounded-lg hover:shadow-lg hover:shadow-red-500/50 transition-all"
-                >
-                  Start Deep Dive
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="container mx-auto px-4 py-20">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-cyan-400">14-Day Timeline</h2>
-
-            <div className="relative">
-              <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-500" />
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-                {[
-                  { day: "Day 1–3", title: "Diagnosis Sprint", desc: "Rapid problem mapping", iconColor: "text-cyan-400", border: "border-cyan-500/30" },
-                  { day: "Day 4–7", title: "Decision Draft", desc: "Options & trade-offs", iconColor: "text-blue-400", border: "border-blue-500/30" },
-                  { day: "Day 8–14", title: "Final Action Plan", desc: "Ready to execute", iconColor: "text-cyan-400", border: "border-cyan-500/30" },
-                ].map((x) => (
-                  <div key={x.day} className={`bg-slate-900/80 border ${x.border} rounded-lg p-6 backdrop-blur-sm`}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <Clock className={`w-6 h-6 ${x.iconColor}`} />
-                      <span className={`${x.iconColor} font-semibold`}>{x.day}</span>
-                    </div>
-                    <h4 className="text-white font-bold mb-2">{x.title}</h4>
-                    <p className="text-slate-400 text-sm">{x.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="container mx-auto px-4 py-20">
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-cyan-500/50 rounded-lg p-12 text-center backdrop-blur-sm">
-              <Lock className="w-16 h-16 text-cyan-400 mx-auto mb-6" />
-              <h3 className="text-2xl font-bold text-white mb-4">The 3-Case Rule</h3>
-              <p className="text-xl text-slate-300 mb-2">
-                We accept only <span className="text-cyan-400 font-bold">3 free cases</span>.
-              </p>
-              <p className="text-slate-400">After that, the lab is closed.</p>
-            </div>
-          </div>
-        </section>
-
+        {/* Footer */}
         <footer className="border-t border-slate-800/50 mt-20">
           <div className="container mx-auto px-4 py-12">
             <div className="max-w-4xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                 <div>
                   <h4 className="text-white font-semibold mb-3">About MarginLab</h4>
-                  <p className="text-slate-400 text-sm">
-                    Analytical support for margin and cost problems. Fast, focused, executable.
-                  </p>
+                  <p className="text-slate-400 text-sm">Analytical support for margin and cost problems. Fast, focused, executable.</p>
                 </div>
                 <div>
                   <h4 className="text-white font-semibold mb-3">Data & Privacy</h4>
